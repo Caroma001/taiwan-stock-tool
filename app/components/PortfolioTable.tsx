@@ -81,7 +81,15 @@ export default function PortfolioTable({
 
             return (
               <tr key={row.id}>
-                <td style={td}>{row.symbol}</td>
+                <td style={td}>
+                  <a
+                    href={`/analysis?symbol=${row.symbol}`}
+                    style={symbolLinkStyle}
+                  >
+                    {row.symbol}
+                  </a>
+                </td>
+
                 <td style={td}>{row.name}</td>
                 <td style={td}>{row.market}</td>
 
@@ -233,6 +241,12 @@ const td: React.CSSProperties = {
 const numberTd: React.CSSProperties = {
   ...td,
   textAlign: "right",
+};
+
+const symbolLinkStyle: React.CSSProperties = {
+  color: "#38bdf8",
+  fontWeight: 800,
+  textDecoration: "none",
 };
 
 const buttonStyle: React.CSSProperties = {
