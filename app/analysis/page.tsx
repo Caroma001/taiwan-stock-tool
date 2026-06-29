@@ -24,13 +24,21 @@ type MergedRow = DailyPrice & {
   foreign_buy: number | null;
 };
 
+function normalizeDate(v: string) {
+  return String(v).slice(0, 10);
+}
+
 function calcMA(data: DailyPrice[], days: number) {
   const rows = data.filter((x) => x.close !== null).slice(0, days);
   if (rows.length < days) return null;
   return rows.reduce((sum, x) => sum + Number(x.close), 0) / days;
 }
 
-function getSignal(latest: number | null, ma20: number | null, ma60: number | null) {
+function getSignal(
+  latest: number | null,
+  ma20: number | null,
+  ma60: number | null
+) {
   if (!latest || !ma20 || !ma60) return "資料不足";
   if (latest < ma20 && ma20 < ma60) return "賣出";
   if (latest > ma20 && ma20 > ma60) return "買入";
@@ -51,22 +59,24 @@ export default function AnalysisPage() {
     async function load() {
       setLoading(true);
 
-      const [{ data: priceData, error: priceError }, { data: foreignData, error: foreignError }] =
-        await Promise.all([
-          supabase
-            .from("daily_prices")
-            .select("*")
-            .eq("symbol", s)
-            .order("trade_date", { ascending: false })
-            .limit(60),
+      const [
+        { data: priceData, error: priceError },
+        { data: foreignData, error: foreignError },
+      ] = await Promise.all([
+        supabase
+          .from("daily_prices")
+          .select("*")
+          .eq("symbol", s)
+          .order("trade_date", { ascending: false })
+          .limit(60),
 
-          supabase
-            .from("foreign_trading")
-            .select("symbol,trade_date,foreign_buy")
-            .eq("symbol", s)
-            .order("trade_date", { ascending: false })
-            .limit(60),
-        ]);
+        supabase
+          .from("foreign_trading")
+          .select("symbol,trade_date,foreign_buy")
+          .eq("symbol", s)
+          .order("trade_date", { ascending: false })
+          .limit(60),
+      ]);
 
       if (priceError) {
         alert("讀取股價資料失敗：" + priceError.message);
@@ -90,13 +100,21 @@ export default function AnalysisPage() {
 
   const mergedRows: MergedRow[] = useMemo(() => {
     const foreignMap = new Map(
-      foreignRows.map((x) => [x.trade_date, Number(x.foreign_buy ?? 0)])
+      foreignRows.map((x) => [
+        normalizeDate(x.trade_date),
+        Number(x.foreign_buy ?? 0),
+      ])
     );
 
-    return rows.slice(0, 20).map((r) => ({
-      ...r,
-      foreign_buy: foreignMap.get(r.trade_date) ?? null,
-    }));
+    return rows.slice(0, 20).map((r) => {
+      const dateKey = normalizeDate(r.trade_date);
+
+      return {
+        ...r,
+        trade_date: dateKey,
+        foreign_buy: foreignMap.has(dateKey) ? foreignMap.get(dateKey)! : null,
+      };
+    });
   }, [rows, foreignRows]);
 
   const analysis = useMemo(() => {
@@ -105,7 +123,9 @@ export default function AnalysisPage() {
     const ma20 = calcMA(rows, 20);
     const ma60 = calcMA(rows, 60);
 
-    const high20 = rows.slice(0, 20).reduce((m, x) => Math.max(m, Number(x.high || 0)), 0);
+    const high20 = rows
+      .slice(0, 20)
+      .reduce((m, x) => Math.max(m, Number(x.high || 0)), 0);
 
     const low20 = rows.slice(0, 20).reduce((m, x) => {
       const v = Number(x.low || 0);
@@ -156,7 +176,11 @@ export default function AnalysisPage() {
         <>
           <section style={gridStyle}>
             <Card title="最新收盤" value={format(analysis.latest)} />
-            <Card title="20日外資合計" value={analysis.foreignBuy20.toLocaleString()} highlight />
+            <Card
+              title="20日外資合計"
+              value={analysis.foreignBuy20.toLocaleString()}
+              highlight
+            />
             <Card title="20日高點" value={format(analysis.high20)} />
             <Card title="20日低點" value={format(analysis.low20)} />
             <Card title="AI摘要" value={analysis.signal} highlight />
@@ -198,7 +222,9 @@ export default function AnalysisPage() {
                       <td style={numberTd}>{format(r.high)}</td>
                       <td style={numberTd}>{format(r.low)}</td>
                       <td style={numberTd}>{format(r.close)}</td>
-                      <td style={numberTd}>{Number(r.volume || 0).toLocaleString()}</td>
+                      <td style={numberTd}>
+                        {Number(r.volume || 0).toLocaleString()}
+                      </td>
                       <td
                         style={{
                           ...numberTd,
@@ -210,7 +236,9 @@ export default function AnalysisPage() {
                               : "#00ff88",
                         }}
                       >
-                        {r.foreign_buy == null ? "-" : Number(r.foreign_buy).toLocaleString()}
+                        {r.foreign_buy == null
+                          ? "-"
+                          : Number(r.foreign_buy).toLocaleString()}
                       </td>
                     </tr>
                   ))}
@@ -250,11 +278,25 @@ function format(v: number | null | undefined) {
   return Number(v).toFixed(2);
 }
 
-function Card({ title, value, highlight }: { title: string; value: string; highlight?: boolean }) {
+function Card({
+  title,
+  value,
+  highlight,
+}: {
+  title: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <div style={cardStyle}>
       <div style={{ color: "#aaa", marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: highlight ? "#facc15" : "#fff" }}>
+      <div
+        style={{
+          fontSize: 22,
+          fontWeight: 800,
+          color: highlight ? "#facc15" : "#fff",
+        }}
+      >
         {value}
       </div>
     </div>
