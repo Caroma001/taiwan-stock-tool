@@ -231,40 +231,23 @@ export default function PortfolioPage() {
   }
 
   async function downloadHistory(row: PortfolioRow) {
-    if (row.hasTwoYearHistory) {
-      alert(`${row.symbol} 已有2年資料，不需要重複下載。`);
-      return;
-    }
-
-    const ok = confirm(`確定下載 ${row.symbol} ${row.name} 近 2 年歷史資料嗎？`);
-    if (!ok) return;
-
     setProgress({
       active: true,
-      label: `下載 ${row.symbol} 近2年資料中...`,
+      label: `更新 ${row.symbol} 資料中...`,
       percent: 10,
     });
 
     try {
-      const res = await fetch("/api/history", {
+      const res = await fetch("/api/watchlist-prices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol: row.symbol,
-          market: row.market,
-        }),
-      });
-
-      setProgress({
-        active: true,
-        label: `整理 ${row.symbol} 歷史資料...`,
-        percent: 70,
+        body: JSON.stringify({ symbol: row.symbol }),
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        alert("下載失敗：" + (data.error || data.message || "未知錯誤"));
+      if (!res.ok || !data.success) {
+        alert("更新失敗：" + (data.error || data.message || "未知錯誤"));
         setProgress({ active: false, label: "", percent: 0 });
         return;
       }
@@ -273,7 +256,7 @@ export default function PortfolioPage() {
 
       setProgress({
         active: true,
-        label: `${row.symbol} 下載完成，共寫入 ${data.inserted ?? 0} 筆資料`,
+        label: `${row.symbol} 更新完成`,
         percent: 100,
       });
 
@@ -281,58 +264,55 @@ export default function PortfolioPage() {
         setProgress({ active: false, label: "", percent: 0 });
       }, 1200);
     } catch (error) {
-      alert("下載失敗：" + String(error));
+      alert("更新失敗：" + String(error));
       setProgress({ active: false, label: "", percent: 0 });
     }
   }
 
   async function updatePrices() {
-    if (!rows.length) return;
-
     setUpdating(true);
-
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-
-      setProgress({
-        active: true,
-        label: `更新 ${row.symbol} ${row.name} 股價中...`,
-        percent: Math.max(5, Math.round((i / rows.length) * 90)),
-      });
-
-      try {
-        const res = await fetch(`/api/stock?symbol=${row.symbol}`);
-        const data = await res.json();
-
-        if (!res.ok || !data?.close) continue;
-
-        await supabase.from("stocks").upsert({
-          symbol: row.symbol,
-          name: data.name || row.name || row.symbol,
-          market: data.market || row.market || "UNKNOWN",
-          industry: data.industry || "",
-          is_active: true,
-        });
-
-        await saveLatestPrice(row.symbol, data);
-      } catch (error) {
-        console.error(row.symbol, error);
-      }
-    }
-
-    await loadPortfolio();
 
     setProgress({
       active: true,
-      label: "股價更新完成",
-      percent: 100,
+      label: "更新持股股價中...",
+      percent: 10,
     });
 
-    setUpdating(false);
+    try {
+      const res = await fetch("/api/watchlist-prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
 
-    setTimeout(() => {
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        alert("更新失敗：" + (data.error || "未知錯誤"));
+        setProgress({ active: false, label: "", percent: 0 });
+        setUpdating(false);
+        return;
+      }
+
+      await loadPortfolio();
+
+      setProgress({
+        active: true,
+        label: `股價更新完成：成功 ${data.successCount ?? "-"} / 總數 ${
+          data.total ?? "-"
+        }`,
+        percent: 100,
+      });
+
+      setTimeout(() => {
+        setProgress({ active: false, label: "", percent: 0 });
+      }, 1200);
+    } catch (error) {
+      alert("更新失敗：" + String(error));
       setProgress({ active: false, label: "", percent: 0 });
-    }, 1000);
+    }
+
+    setUpdating(false);
   }
 
   async function runAiScore() {
@@ -343,16 +323,10 @@ export default function PortfolioPage() {
     });
 
     try {
-      const res = await fetch("/api/ai-score", {
+      const res = await fetch("/api/accumulation-engine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
-      });
-
-      setProgress({
-        active: true,
-        label: "AI 分析結果寫入中...",
-        percent: 75,
       });
 
       const data = await res.json();
@@ -367,7 +341,9 @@ export default function PortfolioPage() {
 
       setProgress({
         active: true,
-        label: `AI 分析完成，共分析 ${data.count ?? 0} 檔`,
+        label: `AI 分析完成：成功 ${data.successCount ?? "-"} / 總數 ${
+          data.total ?? "-"
+        }`,
         percent: 100,
       });
 
@@ -396,11 +372,14 @@ export default function PortfolioPage() {
   );
 
   const totalProfit = rows.reduce((sum, row) => sum + (row.profit ?? 0), 0);
-
   const totalReturn = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
 
   return (
     <main style={pageStyle}>
+      <a href="/dashboard" style={homeButtonStyle}>
+        ← 回到 AI 投資首頁
+      </a>
+
       <h1 style={{ marginTop: 0, marginBottom: 16 }}>💼 Portfolio 持股管理</h1>
 
       <section style={gridStyle}>
@@ -550,6 +529,19 @@ const pageStyle: React.CSSProperties = {
   padding: 24,
   paddingBottom: 90,
   fontSize: "80%",
+};
+
+const homeButtonStyle: React.CSSProperties = {
+  display: "inline-block",
+  marginBottom: 18,
+  padding: "12px 18px",
+  borderRadius: 14,
+  color: "#fff",
+  fontWeight: 900,
+  textDecoration: "none",
+  background: "linear-gradient(180deg, #38bdf8 0%, #2563eb 100%)",
+  boxShadow: "0 6px 0 #1e3a8a, 0 10px 18px rgba(37, 99, 235, 0.45)",
+  border: "1px solid #60a5fa",
 };
 
 const gridStyle: React.CSSProperties = {
