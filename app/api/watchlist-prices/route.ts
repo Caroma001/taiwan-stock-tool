@@ -16,7 +16,15 @@ type FinMindPriceRow = {
   close?: number;
 };
 
-function getStartDate(daysBack = 45) {
+const KEEP_DAYS = 75;
+
+function getStartDate(daysBack = KEEP_DAYS + 10) {
+  const d = new Date();
+  d.setDate(d.getDate() - daysBack);
+  return d.toISOString().slice(0, 10);
+}
+
+function getKeepDate(daysBack = KEEP_DAYS) {
   const d = new Date();
   d.setDate(d.getDate() - daysBack);
   return d.toISOString().slice(0, 10);
@@ -44,13 +52,14 @@ async function fetchFinMindPrices(symbol: string) {
   const params = new URLSearchParams({
     dataset: "TaiwanStockPrice",
     data_id: symbol,
-    start_date: getStartDate(45),
+    start_date: getStartDate(),
   });
 
   const token = process.env.FINMIND_API_TOKEN;
   if (token) params.set("token", token);
 
   const url = `https://api.finmindtrade.com/api/v4/data?${params.toString()}`;
+
   const res = await fetch(url, { cache: "no-store" });
   const json = await res.json();
 
@@ -64,7 +73,7 @@ async function fetchFinMindPrices(symbol: string) {
     .filter((r) => r.date)
     .map((r) => ({
       symbol,
-      trade_date: String(r.date),
+      trade_date: String(r.date).slice(0, 10),
       open: Number(r.open ?? 0),
       high: Number(r.max ?? 0),
       low: Number(r.min ?? 0),
@@ -73,7 +82,7 @@ async function fetchFinMindPrices(symbol: string) {
     }))
     .filter((r) => r.close > 0)
     .sort((a, b) => a.trade_date.localeCompare(b.trade_date))
-    .slice(-30);
+    .slice(-KEEP_DAYS);
 }
 
 async function updateOne(symbol: string) {
@@ -106,7 +115,32 @@ async function updateOne(symbol: string) {
 }
 
 async function cleanOldData() {
-  await supabase.rpc("clean_old_watchlist_data");
+  const keepDate = getKeepDate();
+
+  const { data: targets, error: targetError } = await supabase
+    .from("watchlist")
+    .select("symbol")
+    .eq("user_name", "Bruce")
+    .eq("is_active", true)
+    .eq("enabled", true);
+
+  if (targetError) {
+    throw new Error(`讀取清理清單失敗：${targetError.message}`);
+  }
+
+  const symbols = (targets ?? []).map((x) => x.symbol);
+
+  if (!symbols.length) return;
+
+  const { error: priceError } = await supabase
+    .from("daily_prices")
+    .delete()
+    .in("symbol", symbols)
+    .lt("trade_date", keepDate);
+
+  if (priceError) {
+    throw new Error(`清理 daily_prices 失敗：${priceError.message}`);
+  }
 }
 
 export async function GET() {
@@ -114,6 +148,7 @@ export async function GET() {
     success: true,
     message:
       "Watchlist Prices API is ready. Use POST to update Watchlist price data.",
+    keepDays: KEEP_DAYS,
   });
 }
 
@@ -143,6 +178,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: successCount > 0,
+      keepDays: KEEP_DAYS,
       total: results.length,
       successCount,
       failedCount: results.length - successCount,

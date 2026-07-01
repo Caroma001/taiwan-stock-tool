@@ -14,6 +14,48 @@ function calcMA(rows: DailyPrice[], days: number) {
   return list.reduce((sum, x) => sum + Number(x.close), 0) / days;
 }
 
+function calcTrend(
+  close: number | null,
+  ma5: number | null,
+  ma20: number | null,
+  ma60: number | null
+) {
+  if (!close || !ma5 || !ma20) return "資料不足";
+
+  if (ma60 && close > ma5 && ma5 > ma20 && ma20 > ma60) {
+    return "多頭排列";
+  }
+
+  if (close > ma5 && ma5 > ma20) return "強勢";
+  if (close > ma20) return "偏多";
+  if (close < ma20) return "偏弱";
+
+  return "整理";
+}
+
+function calcRadarScore(
+  close: number | null,
+  ma5: number | null,
+  ma20: number | null,
+  ma60: number | null
+) {
+  if (!close || !ma5 || !ma20) return 0;
+
+  let score = 50;
+
+  if (close > ma5) score += 15;
+  if (ma5 > ma20) score += 20;
+  if (close > ma20) score += 15;
+  if (close < ma20) score -= 20;
+
+  if (ma60) {
+    if (ma20 > ma60) score += 10;
+    if (close < ma60) score -= 10;
+  }
+
+  return Math.max(0, Math.min(100, score));
+}
+
 export async function GET() {
   const { data, error } = await supabase
     .from("watchlist")
@@ -59,19 +101,8 @@ export async function GET() {
     const ma20 = calcMA(history, 20);
     const ma60 = calcMA(history, 60);
 
-    let trend = "資料不足";
-
-    if (close && ma5 && ma20 && ma60) {
-      if (close > ma5 && ma5 > ma20 && ma20 > ma60) {
-        trend = "多頭排列";
-      } else if (close < ma20) {
-        trend = "跌破MA20";
-      } else if (close > ma20 && ma20 > ma60) {
-        trend = "偏多";
-      } else {
-        trend = "整理";
-      }
-    }
+    const trend = calcTrend(close, ma5, ma20, ma60);
+    const radarScore = calcRadarScore(close, ma5, ma20, ma60);
 
     return {
       ...row,
@@ -80,7 +111,18 @@ export async function GET() {
       ma20,
       ma60,
       trend,
+      radarScore,
+      historyCount: history.length,
     };
+  });
+
+  result.sort((a, b) => {
+    const scoreA = Number(a.radarScore ?? 0);
+    const scoreB = Number(b.radarScore ?? 0);
+
+    if (scoreB !== scoreA) return scoreB - scoreA;
+
+    return Number(b.priority ?? 0) - Number(a.priority ?? 0);
   });
 
   return NextResponse.json({
