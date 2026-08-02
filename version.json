@@ -1,0 +1,8 @@
+{
+  "version": "7.8.5",
+  "release": "M7.8.5",
+  "status": "stable",
+  "channel": "production",
+  "architecture": "separated-local-ci-production",
+  "updatedAt": "2026-08-02"
+}

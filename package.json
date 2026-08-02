@@ -1,0 +1,44 @@
+{
+  "name": "twstock",
+  "version": "7.8.5",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run ci-check",
+    "compile:pipeline": "tsc -p tsconfig.pipeline-runtime.json && node scripts/pipeline/prepare-runtime.mjs",
+    "pipeline:run": "npm run compile:pipeline && node .runtime/pipeline/scripts/cli/pipeline-cli.js run",
+    "pipeline:status": "npm run compile:pipeline && node .runtime/pipeline/scripts/cli/pipeline-cli.js status",
+    "top30:refresh": "npm run compile:pipeline && node .runtime/pipeline/scripts/cli/pipeline-cli.js top30",
+    "release:new": "node scripts/release/release-engine.mjs new",
+    "release:finish": "node scripts/release/release-engine.mjs finish",
+    "version:show": "node scripts/release/release-engine.mjs show",
+    "deploy:vercel": "npx vercel --prod",
+    "doctor": "node scripts/check/local.mjs",
+    "check:ci": "node scripts/check/ci.mjs",
+    "check:prod": "node scripts/check/production.mjs",
+    "ci-check": "node scripts/check/ci.mjs"
+  },
+  "dependencies": {
+    "axios": "^1.17.0",
+    "date-fns": "^4.4.0",
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "recharts": "^3.8.1",
+    "@libsql/client": "^0.17.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.7",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

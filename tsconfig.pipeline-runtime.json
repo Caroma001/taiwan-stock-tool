@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".runtime/pipeline",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "incremental": false
+  },
+  "include": [
+    "types/runtime/**/*.d.ts",
+    "scripts/cli/**/*.ts",
+    "services/scoring/**/*.ts",
+    "services/market-context/**/*.ts",
+    "services/Indicators/IndicatorCalculator.ts",
+    "providers/FinMindPriceProvider.ts",
+    "providers/types.ts",
+    "adapters/turso/**/*.ts",
+    "lib/database/**/*.ts",
+    "lib/turso/**/*.ts",
+    "migrations/database/**/*.ts",
+    "migrations/turso/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".runtime"]
+}

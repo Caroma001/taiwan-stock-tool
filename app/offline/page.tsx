@@ -1,0 +1,1 @@
+export default function OfflinePage(){return <main className="mx-auto max-w-xl px-6 py-24 text-center"><h1 className="text-3xl font-bold">目前離線</h1><p className="mt-4 text-slate-400">請確認網路連線後重新整理。已安裝的 Bruce 股票 App 會在恢復連線後讀取最新 Turso 資料。</p></main>}

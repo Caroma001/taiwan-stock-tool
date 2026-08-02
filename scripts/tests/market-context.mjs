@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { rmSync } from "node:fs";
+
+const testDir = ".runtime/algorithm-test";
+rmSync(testDir, { recursive: true, force: true });
+execFileSync("tsc", ["-p", "tsconfig.algorithm-test.json"], { stdio: "inherit" });
+const engine = await import(new URL("../../.runtime/algorithm-test/services/market-context/AlgorithmEngine.js", import.meta.url));
+const base = { trendScore: 25, momentumScore: 20, volumeScore: 15, riskScore: 20, totalScore: 80, confidence: 85, reasons: ["test"] };
+const bull = engine.applyMarketContext(base, { score: 78, regime: "偏多", riskLevel: "低", confidence: 88 });
+const crash = engine.applyMarketContext(base, { score: 20, regime: "恐慌", riskLevel: "高", confidence: 90 });
+assert.ok(bull.finalScore > base.totalScore, "bull market should reward strong participation");
+assert.ok(crash.finalScore < bull.finalScore, "crash market should reduce final score");
+assert.equal(bull.algorithmVersion, "RULES-1");
+const indicator = { symbol: "2330", trade_date: "2026-08-01", close: 100, atr14: 3 };
+const decision = engine.createMarketAwareDecision(indicator, bull);
+assert.ok(decision.target1 > 100);
+assert.ok(decision.stopLoss < 100);
+assert.ok((decision.riskReward ?? 0) > 0);
+console.log("✅ deterministic market-context tests passed");
+rmSync(testDir, { recursive: true, force: true });

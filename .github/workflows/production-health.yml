@@ -1,0 +1,65 @@
+name: Production Health and Auto Rollback
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+  deployment_status:
+
+permissions:
+  contents: read
+  deployments: read
+
+env:
+  VERCEL_CLI_VERSION: "58.4.4"
+  VERCEL_TEAM_SLUG: "caroma3689-s-projects"
+
+jobs:
+  monitor:
+    if: github.event_name != 'deployment_status' || (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Wait for production propagation
+        if: github.event_name == 'deployment_status'
+        run: sleep 45
+
+      - name: Check production health
+        id: health
+        continue-on-error: true
+        env:
+          APP_URL: ${{ secrets.TWSTOCK_PRODUCTION_URL }}
+          MONITORING_SECRET: ${{ secrets.MONITORING_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${APP_URL:-}" || { echo "[E101] Missing TWSTOCK_PRODUCTION_URL"; exit 1; }
+          test -n "${MONITORING_SECRET:-}" || { echo "[E103] Missing MONITORING_SECRET"; exit 1; }
+
+          curl --fail-with-body --retry 3 --retry-delay 10 --max-time 60 \
+            -H "Authorization: Bearer ${MONITORING_SECRET}" \
+            "${APP_URL%/}/api/monitoring/check"
+
+      - name: Install pinned Vercel CLI for guarded rollback
+        if: steps.health.outcome == 'failure' && vars.ENABLE_AUTO_ROLLBACK == 'true'
+        run: npm install --global "vercel@${VERCEL_CLI_VERSION}"
+
+      - name: Automatic Vercel rollback
+        if: steps.health.outcome == 'failure' && vars.ENABLE_AUTO_ROLLBACK == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${VERCEL_TOKEN:-}" || { echo "[E104] Missing VERCEL_TOKEN"; exit 1; }
+
+          vercel rollback \
+            --yes \
+            --token "${VERCEL_TOKEN}" \
+            --scope "${VERCEL_TEAM_SLUG}"
+
+      - name: Fail workflow when unhealthy
+        if: steps.health.outcome == 'failure'
+        run: |
+          echo "[E202] Production monitoring failed"
+          exit 1

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["./*"] },
+    "outDir": ".runtime/algorithm-test"
+  },
+  "include": [
+    "services/market-context/**/*.ts",
+    "services/scoring/types.ts",
+    "lib/database/types.ts"
+  ],
+  "exclude": ["node_modules", ".runtime"]
+}
