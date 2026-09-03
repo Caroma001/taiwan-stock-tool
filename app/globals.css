@@ -3,6 +3,18 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --twst-body-font: 16px;
+  --twst-nav-font: 14px;
+  --twst-table-font: 16px;
+  --twst-small-font: 12.5px;
+  --twst-button-font: 14px;
+  --twst-line-height: 1.5;
+  --twst-control-height: 42px;
+  --twst-control-pad-y: 9px;
+  --twst-control-pad-x: 13px;
+  --twst-cell-pad-y: 9px;
+  --twst-card-pad: 16px;
+  --twst-section-gap: 16px;
 }
 
 @theme inline {
@@ -13,14 +25,432 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  :root { --background: #0a0a0a; --foreground: #ededed; }
 }
+
+html[data-font-scale="xs"] { --twst-body-font: 14px; --twst-nav-font: 12.5px; --twst-table-font: 14px; --twst-small-font: 11.5px; --twst-button-font: 12.5px; }
+html[data-font-scale="sm"] { --twst-body-font: 16px; --twst-nav-font: 14px; --twst-table-font: 16px; --twst-small-font: 12.5px; --twst-button-font: 14px; }
+html[data-font-scale="md"] { --twst-body-font: 18px; --twst-nav-font: 15.5px; --twst-table-font: 18px; --twst-small-font: 14px; --twst-button-font: 15.5px; }
+html[data-font-scale="lg"] { --twst-body-font: 20px; --twst-nav-font: 17px; --twst-table-font: 20px; --twst-small-font: 15.5px; --twst-button-font: 17px; }
+html[data-font-scale="xl"] { --twst-body-font: 22.4px; --twst-nav-font: 19px; --twst-table-font: 22.4px; --twst-small-font: 17px; --twst-button-font: 19px; }
+
+html[data-density="compact"] { --twst-cell-pad-y: 5px; --twst-line-height: 1.35; }
+html[data-density="normal"] { --twst-cell-pad-y: 9px; --twst-line-height: 1.5; }
+html[data-density="comfortable"] { --twst-cell-pad-y: 14px; --twst-line-height: 1.65; }
+
+html[data-card-size="compact"] { --twst-card-pad: 12px; --twst-section-gap: 12px; }
+html[data-card-size="normal"] { --twst-card-pad: 16px; --twst-section-gap: 16px; }
+html[data-card-size="large"] { --twst-card-pad: 21px; --twst-section-gap: 20px; }
+
+html[data-control-size="compact"] { --twst-control-height: 36px; --twst-control-pad-y: 7px; --twst-control-pad-x: 10px; }
+html[data-control-size="normal"] { --twst-control-height: 42px; --twst-control-pad-y: 9px; --twst-control-pad-x: 13px; }
+html[data-control-size="large"] { --twst-control-height: 50px; --twst-control-pad-y: 12px; --twst-control-pad-x: 17px; }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--twst-body-font);
+  line-height: var(--twst-line-height);
+}
+
+button, input, select, textarea { font: inherit; }
+
+/* M8.7.4: top navigation is controlled by Display Manager, including inline pixel styles. */
+.twst-main-navigation,
+.twst-main-navigation * { line-height: var(--twst-line-height); }
+.twst-main-navigation .twst-brand-text { font-size: calc(var(--twst-nav-font) + 1px) !important; }
+.twst-main-navigation .twst-brand-mark { font-size: var(--twst-small-font) !important; }
+.twst-main-navigation .twst-nav-link { font-size: var(--twst-nav-font) !important; min-height: var(--twst-control-height); padding: var(--twst-control-pad-y) var(--twst-control-pad-x) !important; }
+.twst-main-navigation .twst-nav-icon { font-size: var(--twst-small-font) !important; }
+.twst-main-navigation button,
+.twst-main-navigation input,
+.twst-main-navigation select { font-size: var(--twst-button-font) !important; min-height: var(--twst-control-height) !important; }
+
+
+/* The top update progress bar follows the same readable font scale. */
+.twst-update-progress,
+.twst-update-progress * { font-size: var(--twst-small-font) !important; line-height: var(--twst-line-height); }
+.twst-update-progress strong { font-size: var(--twst-nav-font) !important; }
+.twst-update-progress a { min-height: var(--twst-control-height); display: inline-flex; align-items: center; }
+
+/* All application controls use one responsive sizing engine. */
+main button,
+main input,
+main select,
+main textarea,
+main a[style] {
+  font-size: var(--twst-button-font) !important;
+}
+main button,
+main input,
+main select { min-height: var(--twst-control-height); }
+
+/* Fix the hot-stock pool and every data table, including nested 11px inline labels. */
+main table { font-size: var(--twst-table-font) !important; line-height: var(--twst-line-height); }
+main table th,
+main table td { padding-top: var(--twst-cell-pad-y) !important; padding-bottom: var(--twst-cell-pad-y) !important; font-size: var(--twst-table-font) !important; }
+main table th *,
+main table td * { font-size: inherit !important; line-height: inherit !important; }
+
+/* M8.11.10: stock/price lists must be as readable as normal body copy. */
+main table.twst-stock-data,
+main table.twst-stock-data th,
+main table.twst-stock-data td,
+main .twst-stock-data { font-size: var(--twst-body-font) !important; }
+main table.twst-stock-data th { font-weight: 900; }
+
+/* Cards and panels respond to card-size without requiring every page to be rewritten. */
+main section { margin-top: var(--twst-section-gap); }
+main section > div { line-height: var(--twst-line-height); }
+
+/* Common small labels are never allowed to become unreadably tiny. */
+main small { font-size: var(--twst-small-font) !important; }
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, .72);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .twst-main-navigation .twst-nav-link { min-height: 44px; }
+  main table { min-width: 860px; }
+}
+
+@media (max-width: 760px) {
+  html[data-font-scale="xl"] { --twst-body-font: 21px; --twst-nav-font: 18px; --twst-table-font: 21px; }
+  .twst-main-navigation .twst-tools { width: 100%; justify-content: flex-end; }
+}
+
+
+/* M8.8.2: Display Manager drawer stays below sticky progress/navigation and inside viewport. */
+.twst-display-overlay { animation: twstFadeIn .16s ease-out; }
+.twst-display-drawer { animation: twstDrawerIn .2s ease-out; scrollbar-gutter: stable; }
+@keyframes twstFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes twstDrawerIn { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }
+@media (max-width: 760px) {
+  .twst-display-drawer { top: 88px !important; right: 10px !important; bottom: 10px !important; width: calc(100vw - 20px) !important; padding: 16px !important; }
+}
+
+/* M8.9.2 Theme Engine and top-layer display modal */
+:root {
+  --twst-theme-page: #020617;
+  --twst-theme-panel: #0f172a;
+  --twst-theme-real: #12372a;
+  --twst-theme-test: #172554;
+  --twst-theme-watch: #1f2937;
+  --twst-theme-accent: #0891b2;
+  --twst-theme-text: #e5eefc;
+  --twst-theme-muted: #94a3b8;
+  --twst-row-height: 66px;
+}
+
+body,
+main {
+  background: var(--twst-theme-page) !important;
+  color: var(--twst-theme-text) !important;
+}
+
+main section,
+main .twst-panel {
+  background-color: var(--twst-theme-panel);
+}
+
+.twst-display-trigger {
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--twst-theme-accent) 65%, white);
+  background: color-mix(in srgb, var(--twst-theme-accent) 28%, #020617);
+  color: #fff;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.twst-theme-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left)) !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  background: rgba(2, 6, 23, 0.82);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  animation: twstThemeFadeIn 0.16s ease-out;
+}
+
+.twst-theme-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, calc(100vw - 40px)) !important;
+  height: min(820px, calc(100dvh - 40px)) !important;
+  max-height: calc(100dvh - 40px) !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden !important;
+  color: var(--twst-theme-text);
+  background: var(--twst-theme-panel);
+  border: 1px solid color-mix(in srgb, var(--twst-theme-muted) 55%, transparent);
+  border-radius: 18px;
+  box-shadow: 0 32px 110px rgba(0, 0, 0, 0.72);
+  animation: twstThemeDialogIn 0.2s ease-out;
+}
+
+.twst-theme-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid color-mix(in srgb, var(--twst-theme-muted) 28%, transparent);
+  background: var(--twst-theme-panel);
+}
+
+.twst-theme-head h2 {
+  margin: 4px 0;
+}
+
+.twst-theme-head p {
+  margin: 0;
+  color: var(--twst-theme-muted);
+}
+
+.twst-theme-head > button {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.twst-theme-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 10px 22px 22px;
+}
+
+.twst-theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.twst-theme-block {
+  min-width: 0;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #334155;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--twst-theme-panel) 85%, black);
+}
+
+.twst-theme-block h3 {
+  margin: 0 0 10px;
+}
+
+.twst-choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.twst-choice-row button,
+.twst-theme-footer button {
+  min-height: 40px;
+  border: 1px solid #475569;
+  border-radius: 9px;
+  background: #111827;
+  color: #fff;
+  padding: 9px 13px;
+  cursor: pointer;
+}
+
+.twst-choice-row button {
+  min-width: 86px;
+}
+
+.twst-choice-row button.active {
+  background: var(--twst-theme-accent);
+  border-color: var(--twst-theme-accent);
+}
+
+.twst-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.twst-color-grid label {
+  display: grid;
+  grid-template-columns: 1fr 42px;
+  gap: 6px;
+  align-items: center;
+  padding: 9px;
+  border-radius: 10px;
+  background: #020617;
+}
+
+.twst-color-grid code {
+  grid-column: 1 / -1;
+  color: var(--twst-theme-muted);
+  font-size: 12px;
+}
+
+.twst-color-grid input {
+  width: 42px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.twst-theme-preview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.twst-theme-preview > * {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  color: #fff;
+}
+
+.twst-theme-preview .real { background: var(--twst-theme-real); }
+.twst-theme-preview .test { background: var(--twst-theme-test); }
+.twst-theme-preview .watch { background: var(--twst-theme-watch); }
+.twst-theme-preview button { background: var(--twst-theme-accent); }
+
+.twst-theme-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--twst-theme-muted) 28%, transparent);
+  background: var(--twst-theme-panel);
+}
+
+.twst-theme-footer .primary {
+  background: var(--twst-theme-accent);
+  border-color: var(--twst-theme-accent);
+}
+
+.twst-holding-row {
+  height: var(--twst-row-height) !important;
+  min-height: var(--twst-row-height) !important;
+}
+
+.twst-holding-row td {
+  height: var(--twst-row-height) !important;
+  min-height: var(--twst-row-height) !important;
+  vertical-align: middle !important;
+}
+
+.twst-holding-real {
+  background: color-mix(in srgb, var(--twst-theme-real) 82%, transparent) !important;
+  box-shadow: inset 5px 0 0 color-mix(in srgb, var(--twst-theme-real) 40%, white);
+}
+
+.twst-holding-test {
+  background: color-mix(in srgb, var(--twst-theme-test) 74%, transparent) !important;
+  box-shadow: inset 5px 0 0 color-mix(in srgb, var(--twst-theme-test) 38%, white);
+}
+
+.twst-holding-watch {
+  background: color-mix(in srgb, var(--twst-theme-watch) 68%, transparent) !important;
+  box-shadow: inset 5px 0 0 color-mix(in srgb, var(--twst-theme-watch) 32%, white);
+}
+
+.twst-rec-badge {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--twst-theme-accent) 75%, #020617);
+  color: white;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.twst-row-actions {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.twst-selection-row { min-height: 62px; }
+.twst-rec-buy { background: #047857 !important; }
+.twst-rec-build { background: #0369a1 !important; }
+.twst-rec-watch { background: #854d0e !important; }
+.twst-rec-risk { background: #9f1239 !important; }
+
+@keyframes twstThemeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes twstThemeDialogIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 760px) {
+  .twst-theme-overlay {
+    align-items: stretch !important;
+    padding: 10px !important;
+  }
+
+  .twst-theme-dialog {
+    width: 100% !important;
+    height: calc(100dvh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 14px;
+  }
+
+  .twst-theme-head,
+  .twst-theme-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .twst-theme-body {
+    padding: 6px 16px 16px;
+  }
+
+  .twst-theme-grid,
+  .twst-color-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .twst-theme-preview {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .twst-theme-footer {
+    flex-wrap: wrap;
+  }
 }

@@ -1,0 +1,9 @@
+import {NextRequest,NextResponse} from "next/server";
+import {createTursoDatabase} from "@/lib/database/createTursoDatabase";
+import {MigrationRunner} from "@/migrations/database/MigrationRunner";
+import {tursoMigrations} from "@/migrations/turso";
+import {readForeignAccumulation} from "@/lib/foreign-accumulation";
+export const runtime='nodejs';export const dynamic='force-dynamic';
+async function db(){const x=createTursoDatabase();await new MigrationRunner(x,tursoMigrations).migrate();return x}
+export async function GET(req:NextRequest){try{const symbols=(req.nextUrl.searchParams.get('symbols')??'').split(',').map(x=>x.trim()).filter(Boolean);const map=await readForeignAccumulation(symbols);return NextResponse.json({ok:true,rows:[...map.values()]})}catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:String(e)},{status:500})}}
+export async function POST(req:NextRequest){try{const body=await req.json();const rows=Array.isArray(body.rows)?body.rows:[];const x=await db();const now=new Date().toISOString();let saved=0;for(const r of rows){const symbol=String(r.symbol??'').trim(),date=String(r.tradeDate??'').trim();if(!/^\d{4,6}$/.test(symbol)||!/^\d{4}-\d{2}-\d{2}$/.test(date))continue;await x.execute({sql:`INSERT INTO foreign_investor_daily(symbol,trade_date,net_buy_shares,buy_shares,sell_shares,source,updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(symbol,trade_date) DO UPDATE SET net_buy_shares=excluded.net_buy_shares,buy_shares=excluded.buy_shares,sell_shares=excluded.sell_shares,source=excluded.source,updated_at=excluded.updated_at`,args:[symbol,date,Number(r.netBuyShares??0),r.buyShares==null?null:Number(r.buyShares),r.sellShares==null?null:Number(r.sellShares),String(r.source??'institutional'),now]});saved++}return NextResponse.json({ok:true,saved})}catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:String(e)},{status:400})}}

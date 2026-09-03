@@ -67,7 +67,8 @@ export class TursoDatabaseAdapter implements DatabaseAdapter {
     try {
       await this.client.batch(statements.map((statement) => ({ sql: statement.sql, args: statement.args })), "write");
     } catch (error) {
-      throw new DatabaseError("QUERY_FAILED", "Turso batch failed.", { cause: error });
+      const causeMessage = error instanceof Error ? error.message : String(error);
+      throw new DatabaseError("QUERY_FAILED", `Turso batch failed: ${causeMessage}`, { cause: error });
     }
   }
 

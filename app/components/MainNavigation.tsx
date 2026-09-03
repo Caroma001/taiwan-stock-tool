@@ -2,35 +2,36 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import QuickStockSearch from "./QuickStockSearch";
+import DisplayPreferences from "./ui/DisplayPreferences";
+import { PROJECT_RELEASE } from "@/lib/version/project-version";
 
 const items = [
-  { href: "/daily-lab", label: "主頁", icon: "⌂" },
-  { href: "/portfolio", label: "持股觀察", icon: "◎" },
-  { href: "/portfolio-ai-validation", label: "兩週 AI 驗證", icon: "AI" },
+  { href: "/daily-lab", label: "綜合日報", icon: "報" },
+  { href: "/development-center", label: "每日一鍵更新", icon: "↻" },
+  { href: "/swing10", label: "Swing10", icon: "10" },
+  { href: "/bruce-score", label: "Bruce Score", icon: "B" },
+  { href: "/portfolio-manager", label: "投資組合", icon: "◎" },
+  { href: "/strategy-guide", label: "選股策略", icon: "策" },
   { href: "/trade-history", label: "歷史交易", icon: "↺" },
-  { href: "/daily-validation", label: "AI 驗證中心", icon: "◆" },
-  { href: "/full-market-scanner", label: "Top 30", icon: "30" },
-  { href: "/decision-engine", label: "AI 決策", icon: "★" },
-  { href: "/learning-center", label: "AI 學習", icon: "↗" },
-  { href: "/ai-engine", label: "AI 分析", icon: "✦" },
-  { href: "/indicators", label: "技術指標", icon: "∿" },
-  { href: "/sync", label: "資料同步", icon: "⇄" },
-  { href: "/database-maintenance", label: "資料庫維護", icon: "▣" },
-  { href: "/cloud", label: "雲端更新", icon: "☁" },
-  { href: "/cloud-deployment", label: "雲端部署", icon: "↗" },
+  { href: "/stock-analysis", label: "個股分析", icon: "✦" },
 ] as const;
 
 export default function MainNavigation() {
   const pathname = usePathname();
 
   return (
-    <header style={shell}>
+    <header style={shell} className="twst-main-navigation">
       <div style={bar}>
-        <Link href="/daily-lab" style={brand} aria-label="回到主頁">
-          <span style={brandMark}>Bruce</span>
-          <span style={brandText}>Bruce's 台股決策中心</span>
+        <Link href="/daily-lab" style={brand} aria-label="回到綜合日報">
+          <span style={brandMark} className="twst-brand-mark" aria-hidden="true">◆◆◆</span>
+          <span style={brandText} className="twst-brand-text">Bruce's 台股決策中心&nbsp;&nbsp;{PROJECT_RELEASE}</span>
         </Link>
 
+        <div style={tools} className="twst-tools">
+          <QuickStockSearch />
+          <DisplayPreferences />
+        </div>
         <nav style={nav} aria-label="主要導覽">
           {items.map((item) => {
             const active =
@@ -41,6 +42,7 @@ export default function MainNavigation() {
               <Link
                 key={item.href}
                 href={item.href}
+                className="twst-nav-link"
                 style={{
                   ...link,
                   ...(active ? activeLink : {}),
@@ -49,7 +51,7 @@ export default function MainNavigation() {
                     : {}),
                 }}
               >
-                <span style={icon}>{item.icon}</span>
+                <span style={icon} className="twst-nav-icon">{item.icon}</span>
                 <span>{item.label}</span>
               </Link>
             );
@@ -102,6 +104,13 @@ const brandMark: React.CSSProperties = {
 
 const brandText: React.CSSProperties = {
   fontSize: 15,
+};
+
+const tools: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  marginLeft: "auto",
 };
 
 const nav: React.CSSProperties = {

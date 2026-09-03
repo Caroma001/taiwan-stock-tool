@@ -4,17 +4,25 @@
     "hnd1"
   ],
   "functions": {
-    "app/api/cloud/worker/route.ts": {
-      "maxDuration": 300
-    },
-    "app/api/cron/daily/route.ts": {
-      "maxDuration": 300
-    },
     "app/api/health/route.ts": {
       "maxDuration": 30
     },
     "app/api/monitoring/check/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/development/update/start/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/queues/twstock-daily-update/route.ts": {
+      "maxDuration": 300,
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "twstock-daily-update",
+          "retryAfterSeconds": 60,
+          "initialDelaySeconds": 0
+        }
+      ]
     }
   },
   "headers": [
@@ -40,10 +48,13 @@
       ]
     }
   ],
+  "git": {
+    "deploymentEnabled": false
+  },
   "crons": [
     {
-      "path": "/api/cron/daily",
-      "schedule": "30 10 * * 1-5"
+      "path": "/api/scheduled/daily-close",
+      "schedule": "0 7 * * 1-5"
     }
   ]
 }

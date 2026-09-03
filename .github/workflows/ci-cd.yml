@@ -1,17 +1,13 @@
-name: twstock CI CD
+name: twstock M8.8.2 Manual Release Verification
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: twstock-${{ github.ref }}
+  group: twstock-m8-8-2-manual-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -19,142 +15,17 @@ env:
 
 jobs:
   verify-build:
-    name: Verify and Build
+    name: Manual Verify and Build
     runs-on: ubuntu-latest
     timeout-minutes: 25
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run M7.8.5 CI check
-        run: npm run ci-check
-
-  wait-for-vercel:
-    name: Wait for Vercel Git Deployment
-    needs: verify-build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    env:
-      TWSTOCK_PRODUCTION_URL: ${{ secrets.TWSTOCK_PRODUCTION_URL }}
-
-    steps:
-      - name: Validate production URL
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          test -n "${TWSTOCK_PRODUCTION_URL:-}" || {
-            echo "[E101] Missing TWSTOCK_PRODUCTION_URL"
-            echo "Add the production origin to GitHub Repository Secrets."
-            exit 1
-          }
-
-          PRODUCTION_URL="${TWSTOCK_PRODUCTION_URL%/}"
-          case "${PRODUCTION_URL}" in
-            https://*) ;;
-            *)
-              echo "[E102] TWSTOCK_PRODUCTION_URL must begin with https://"
-              exit 1
-              ;;
-          esac
-
-          echo "✅ Vercel Git Integration target configured"
-
-      - name: Wait for Vercel Git Integration
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Vercel Git Integration deploys the pushed main commit."
-          echo "GitHub Actions observes Production instead of running Vercel CLI."
-          sleep 45
-
-  production-health-gate:
-    name: Production Health Gate
-    needs: [verify-build, wait-for-vercel]
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    if: >
-      always() &&
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      needs.verify-build.result == 'success' &&
-      needs.wait-for-vercel.result == 'success'
-
-    env:
-      TWSTOCK_PRODUCTION_URL: ${{ secrets.TWSTOCK_PRODUCTION_URL }}
-
-    steps:
-      - name: Validate production URL for health gate
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${TWSTOCK_PRODUCTION_URL:-}" || {
-            echo "[E101] Missing TWSTOCK_PRODUCTION_URL"
-            exit 1
-          }
-
-          case "${TWSTOCK_PRODUCTION_URL%/}" in
-            https://*) ;;
-            *)
-              echo "[E102] TWSTOCK_PRODUCTION_URL must begin with https://"
-              exit 1
-              ;;
-          esac
-
-          echo "✅ Production URL available to health gate"
-
-      - name: Check production health and readiness
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          PRODUCTION_URL="${TWSTOCK_PRODUCTION_URL%/}"
-
-          for endpoint in health ready; do
-            passed=false
-
-            for attempt in 1 2 3 4 5 6 7 8 9 10; do
-              URL="${PRODUCTION_URL}/api/${endpoint}"
-              echo "Checking /api/${endpoint}; attempt ${attempt}/10"
-
-              code="$(
-                curl \
-                  --silent \
-                  --show-error \
-                  --location \
-                  --output "/tmp/${endpoint}.txt" \
-                  --write-out "%{http_code}" \
-                  --max-time 30 \
-                  "${URL}" || true
-              )"
-
-              cat "/tmp/${endpoint}.txt" 2>/dev/null || true
-              echo
-
-              if [ "${code}" -ge 200 ] 2>/dev/null && [ "${code}" -lt 300 ]; then
-                echo "✅ /api/${endpoint} passed"
-                passed=true
-                break
-              fi
-
-              echo "⚠ /api/${endpoint} returned HTTP ${code}"
-              sleep 15
-            done
-
-            if [ "${passed}" != true ]; then
-              echo "[E201] Production /api/${endpoint} did not become healthy"
-              exit 1
-            fi
-          done
+      - run: npm ci
+      - run: npm run safety:check
+      - run: npm run ci-check
+      - run: npm run typecheck
+      - run: npm run build

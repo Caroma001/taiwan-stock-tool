@@ -34,9 +34,11 @@ export class MigrationRunner {
   }
 
   async migrate(): Promise<MigrationStatus> {
-    await this.ensureMetadataTable();
+    // status() already creates schema_migrations. Avoid the old duplicate
+    // CREATE + SELECT before and after every service-level migration check.
     const initial = await this.status();
     const appliedSet = new Set(initial.applied);
+    const applied = [...initial.applied];
 
     for (const migration of this.sortedMigrations()) {
       if (appliedSet.has(migration.version)) continue;
@@ -48,6 +50,8 @@ export class MigrationRunner {
             args: [migration.version, migration.name, new Date().toISOString()],
           });
         }, { mode: "write" });
+        appliedSet.add(migration.version);
+        applied.push(migration.version);
       } catch (error) {
         throw new DatabaseError(
           "MIGRATION_FAILED",
@@ -56,7 +60,9 @@ export class MigrationRunner {
         );
       }
     }
-    return this.status();
+
+    const sortedApplied = [...applied].sort((a, b) => a - b);
+    return { currentVersion: sortedApplied.at(-1) ?? 0, applied: sortedApplied, pending: [] };
   }
 
   private async ensureMetadataTable(): Promise<void> {

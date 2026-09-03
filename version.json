@@ -1,8 +1,10 @@
 {
-  "version": "7.8.5",
-  "release": "M7.8.5",
-  "status": "stable",
-  "channel": "production",
-  "architecture": "separated-local-ci-production",
-  "updatedAt": "2026-08-02"
+  "name": "twstock",
+  "version": "8.12.3",
+  "release": "M8.12.3",
+  "status": "Candidate",
+  "verification": "Pending runtime validation",
+  "build": "Passed",
+  "deployment": "Ready",
+  "updatedAt": "2026-09-03T00:30:38.371050+00:00"
 }

@@ -19,4 +19,4 @@ Return progress, recent tasks, speed metrics, ETA, and saved execution settings.
 
 ### GET / POST `/api/cron/price-foundation`
 
-Run one saved-settings batch when automatic synchronization is enabled. In production, requires `Authorization: Bearer <CRON_SECRET>`.
+Run one saved-settings batch when automatic synchronization is enabled.

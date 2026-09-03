@@ -1,4 +1,0 @@
-import { NextResponse } from "next/server";
-import { getCloudStatus } from "@/lib/cloud/jobs";
-export const runtime="nodejs"; export const dynamic="force-dynamic";
-export async function GET(){try{return NextResponse.json(await getCloudStatus());}catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:String(e)},{status:500});}}

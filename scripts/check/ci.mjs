@@ -21,10 +21,7 @@ const buildEnv = {
   CI: "true",
   TURSO_DATABASE_URL: process.env.TURSO_DATABASE_URL || "libsql://ci-placeholder.invalid",
   TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN || "ci-placeholder-token",
-  APP_ACCESS_PASSWORD: process.env.APP_ACCESS_PASSWORD || "ci-placeholder-password",
-  AUTH_SESSION_SECRET: process.env.AUTH_SESSION_SECRET || "ci-placeholder-session-secret",
   CLOUD_ADMIN_SECRET: process.env.CLOUD_ADMIN_SECRET || "ci-placeholder-cloud-secret",
-  CRON_SECRET: process.env.CRON_SECRET || "ci-placeholder-cron-secret",
   MONITORING_SECRET: process.env.MONITORING_SECRET || "ci-placeholder-monitoring-secret",
 };
 

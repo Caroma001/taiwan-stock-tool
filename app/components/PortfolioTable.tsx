@@ -156,7 +156,7 @@ export default function PortfolioTable({
                 >
                   {row.profitPercent == null
                     ? "-"
-                    : `${row.profitPercent.toFixed(2)} %`}
+                    : `${Number(row.profitPercent ?? 0).toFixed(2)} %`}
                 </td>
 
                 <td style={td}>

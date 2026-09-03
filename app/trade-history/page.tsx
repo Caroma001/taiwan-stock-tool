@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { PROJECT_RELEASE } from "@/lib/version/project-version";
 
 type Filter = "real" | "test" | "all";
 const money = (value: unknown) => Math.round(Number(value ?? 0)).toLocaleString("zh-TW");
@@ -29,13 +30,13 @@ export default function TradeHistoryPage() {
     <main style={page}>
       <header style={header}>
         <div>
-          <div style={eye}>twstock M7.4.3 · Turso</div>
+          <div style={eye}>twstock {PROJECT_RELEASE} · Turso</div>
           <h1>歷史交易紀錄</h1>
           <p style={muted}>真實交易與測試交易分開統計，預設只顯示真實已實現損益。</p>
         </div>
         <nav style={nav}>
           <a style={btn} href="/portfolio">持股管理</a>
-          <a style={btn} href="/daily-validation">AI 驗證中心</a>
+          <a style={btn} href="/swing10">Swing10</a>
           <button style={btn} onClick={() => void load()}>重新整理</button>
         </nav>
       </header>

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MainNavigation from "./components/MainNavigation";
 import PwaRegister from "./components/PwaRegister";
+import GlobalUpdateProgress from "@/components/update/GlobalUpdateProgress";
+import Swing10CloseReminder from "./components/Swing10CloseReminder";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Bruce's 台股決策中心",
-  description: "Bruce's 台股決策、持股管理、AI 驗證與技術分析中心",
+  description: "Bruce's 台股籌碼選股、持股管理與技術分析中心",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon-192.png",
@@ -40,6 +42,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <PwaRegister />
+        <GlobalUpdateProgress />
+        <Swing10CloseReminder />
         <MainNavigation />
         {children}
       </body>
